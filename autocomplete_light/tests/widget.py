@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 import os
 
 from django import VERSION
-from django.test import LiveServerTestCase
 
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.keys import Keys
@@ -11,29 +10,11 @@ from selenium import webdriver
 from selenium.webdriver.support import ui
 
 
-if VERSION[0] == 1 and VERSION[1] < 7:
-    # Patch for travis
-    from django.test.testcases import StoppableWSGIServer
-
-    def patient_shutdown(self):
-        """
-        Stops the serve_forever loop.
-
-        Blocks until the loop has finished. This must be called while
-        serve_forever() is running in another thread, or it will
-        deadlock.
-        """
-        self._StoppableWSGIServer__serving = False
-        if not self._StoppableWSGIServer__is_shut_down.wait(30):
-            raise RuntimeError(
-                "Failed to shutdown the live test server in 2 seconds. The "
-                "server might be stuck or generating a slow response.")
-    StoppableWSGIServer.shutdown = patient_shutdown
-
-    from django.test import LiveServerTestCase
-else:
+try:
     # LiveServerTestCase doesn't serve static files in 1.7 anymore
     from django.contrib.staticfiles.testing import StaticLiveServerTestCase as LiveServerTestCase
+except ImportError:
+    from django.test import LiveServerTestCase
 
 
 if os.environ.get('TRAVIS', False):
